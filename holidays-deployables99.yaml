@@ -1,0 +1,120 @@
+apiVersion: app.ibm.com/v1alpha1
+kind: Channel
+metadata:
+  name: holidays-chan99
+  namespace: holidays-deployables99
+  labels:
+    app: holidayschan99
+spec:
+  type: Namespace
+  pathname: holidays-deployables99
+---
+apiVersion: app.ibm.com/v1alpha1
+kind: Deployable
+metadata:
+  name: chan-holidays-deployment
+  namespace: holidays-deployables99
+  annotations:
+    app.ibm.com/is-local-deployable: "false"
+  labels:
+    app: holidayschan99
+    component: main
+    package: modresort
+spec:
+  template:
+    kind: Deployment
+    apiVersion: apps/v1
+    metadata:
+      name: chan-holidays-deployment99
+      labels:
+        app: holidayschan99
+    spec:
+      selector:
+        matchLabels:
+          app: holidayschan99
+          release: holidays-chan
+          tier: frontend
+      replicas: 1
+      template:
+        metadata:
+          labels:
+            app: holidayschan99
+            release: holidays-chan
+            tier: frontend
+        spec:
+          containers:
+            - name: frontend
+              image: "cloudmx/modresort:latest"
+              imagePullPolicy: Always
+              ports:
+                - containerPort: 9080
+              env:
+              - name: GET_HOSTS_FROM
+                value: dns
+              - name: WLP_LOGGING_CONSOLE_FORMAT
+                value: json
+              - name: WLP_LOGGING_CONSOLE_LOGLEVEL
+                value: info
+              - name: WLP_LOGGING_CONSOLE_SOURCE
+                value: message,trace,accessLog,ffdc
+---
+apiVersion: app.ibm.com/v1alpha1
+kind: Deployable
+metadata:
+  name: chan-holidays-service
+  namespace: holidays-deployables99
+  annotations:
+    app.ibm.com/is-local-deployable: "false"
+  labels:
+    app: holidayschan99
+    component: main
+    package: modresort
+spec:
+  template:
+    kind: Service
+    apiVersion: v1
+    metadata:
+      name: chan-holidays-service99
+      labels:
+        app: holidayschan99
+    spec:
+      type: NodePort
+      ports:
+        - port: 9080
+          nodePort: 30199
+      selector:
+        app: holidayschan99
+        release: holidays-chan
+        tier: frontend
+---
+apiVersion: app.ibm.com/v1alpha1
+kind: Deployable
+metadata:
+  name: chan-holidays-route
+  namespace: holidays-deployables99
+  annotations:
+    app.ibm.com/is-local-deployable: "false"
+  labels:
+    app: holidayschan99
+    component: main
+    package: modresort
+spec:
+  template:
+    apiVersion: route.openshift.io/v1
+    kind: Route
+    metadata:
+      labels:
+        app: chan-holidays-route99
+      name: holidays
+    spec:
+      port:
+        targetPort: 9080
+      subdomain: ""
+      to:
+        kind: Service
+        name: chan-holidays-service99
+        weight: 100
+      wildcardPolicy: None  
+---
+
+

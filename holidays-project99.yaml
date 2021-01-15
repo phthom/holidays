@@ -1,0 +1,60 @@
+apiVersion: app.k8s.io/v1beta1
+kind: Application
+metadata:
+  name: holidays-app99
+  namespace: holidays-project99
+  labels:
+    app: holidaysapp
+spec:
+  selector:
+    matchExpressions:
+    - key: release
+      operator: In
+      values:
+      - holidays99
+  componentKinds:
+  - group: app.ibm.com
+    kind: Subscription
+---
+apiVersion: app.ibm.com/v1alpha1
+kind: Subscription
+metadata:
+  name: holidays-sub99
+  namespace: holidays-project99
+  labels:
+    app: holidaysapp
+    release: holidays99
+spec:
+  channel: holidays-deployables99/holidays-chan99
+  name: ""
+  packageFilter:
+    version: ">=1.x"
+    labelSelector:
+      matchLabels:
+        package: modresort
+        component: main
+  placement:
+    placementRef:
+      name: holidays-pla99
+      kind: PlacementRule
+      group: app.ibm.com
+  overrides:
+  - clusterName: "/"
+    clusterOverrides:
+    - path: "metadata.namespace"
+      value: default
+---
+apiVersion: app.ibm.com/v1alpha1
+kind: PlacementRule
+metadata:
+  name: holidays-pla99
+  namespace: holidays-project99
+  labels:
+    app: holidaysapp
+    release: holidays99
+spec:
+  clusterReplicas: 1
+  clusterLabels:
+    matchLabels:  
+      environment: QA
+---
